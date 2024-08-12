@@ -117,7 +117,7 @@ def draw_line(color, point_a, point_b, width):
                                         (point_b[0] - offset[0], point_b[1] - offset[1]),
                                         (point_a[0] - offset[0], point_a[1] - offset[1])]) #get the 4 points of the line and draw
 
-def draw_text(text, font_name, size, position, color):
+def draw_text(color, position, text, font_name, size):
     global window
     validate_string(text, "text")
     validate_font(font_name, "font_name")
