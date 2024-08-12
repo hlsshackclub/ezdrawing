@@ -1,4 +1,5 @@
 import math
+import os
 import pygame
 from pygame import gfxdraw
 
@@ -54,6 +55,18 @@ def validate_font(font_name, name = "font_name"):
     if not font_name in pygame.font.get_fonts():
         raise Exception(f"{name} ({font_name}) was not found in the system fonts. Valid fonts can be found with getFonts()")
 
+def validate_image_extension(path, name = "path"):
+    if type(path) != str:
+        raise Exception(f"{name} is not a string (it is {type(path)})")
+    
+    try:
+        extensionIndex = path.rindex(".")
+    except:
+        raise Exception(f"{name} does not have a file extension")
+    extension = path[extensionIndex:].lower()
+    if not extension in [".bmp", ".tga", ".jpeg", ".png"]:
+        raise Exception(f"{name} does not have a valid file extension (extension is {extension}). Valid extensions are .bmp, .tga, .jpeg, .png")
+
 #undo/update stuff
 can_undo_ = False
 def can_undo():
@@ -98,7 +111,7 @@ def draw_ellipse(color, top_left, bottom_right, validate = True, undoable = True
     big = pygame.Surface(((bottom_right[0] - top_left[0]) * 4, (bottom_right[1] - top_left[1]) * 4), pygame.SRCALPHA)
     pygame.draw.ellipse(big, color, (0, 0, (bottom_right[0] - top_left[0]) * 4, (bottom_right[1] - top_left[1]) * 4))
     small = pygame.transform.smoothscale(big, (bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
-    window.blit(small, top_left)
+    window.blit(small, top_left, special_flags=pygame.BLEND_PREMULTIPLIED)
     
 def draw_line(color, point_a, point_b, width, validate = True, undoable = True):
     global window
@@ -133,7 +146,7 @@ def draw_line(color, point_a, point_b, width, validate = True, undoable = True):
     pygame.draw.polygon(big, color, points_moved) #draw the line to the big surface
     small = pygame.transform.smoothscale(big, (round(bigSurfaceSize[0] / 4), round(bigSurfaceSize[1] / 4))) #scale it down
     blit_offset = (round(min_point[0] / 4), round(min_point[1] / 4)) #because all the point coords had to be positive, when blitting the points need to be offset
-    window.blit(small, (point_a[0] + blit_offset[0], point_a[1] + blit_offset[1])) #blit
+    window.blit(small, (point_a[0] + blit_offset[0], point_a[1] + blit_offset[1]), special_flags=pygame.BLEND_PREMULTIPLIED) #blit
     
     
 def draw_capped_line(color, point_a, point_b, width, validate = True, undoable = True):
@@ -281,6 +294,14 @@ def get_pressed_mouse_buttons():
     for event in pressed_mouse_button_events:
         buttons.append(event.button)
     return buttons
+
+#saving
+def save(path):
+    global window
+    
+    validate_image_extension(path)
+    
+    pygame.image.save(window, path)
 
 #initialization stuff
 window = None
