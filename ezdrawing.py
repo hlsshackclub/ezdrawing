@@ -81,7 +81,7 @@ def draw_rect(color, top_left, bottom_right):
     
     update_old_window()
     
-    pygame.draw.rect(window, color, (*top_left, *bottom_right))
+    pygame.draw.rect(window, color, (*top_left, bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
 
 def draw_ellipse(color, top_left, bottom_right):
     global window
@@ -90,7 +90,7 @@ def draw_ellipse(color, top_left, bottom_right):
     
     update_old_window()
     
-    pygame.draw.ellipse(window, color, (*top_left, *bottom_right))
+    pygame.draw.ellipse(window, color, (*top_left, bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
 
 def draw_line(color, point_a, point_b, width):
     global window
@@ -116,6 +116,12 @@ def draw_line(color, point_a, point_b, width):
                                         (point_b[0] + offset[0], point_b[1] + offset[1]),
                                         (point_b[0] - offset[0], point_b[1] - offset[1]),
                                         (point_a[0] - offset[0], point_a[1] - offset[1])]) #get the 4 points of the line and draw
+    
+def draw_capped_line(color, point_a, point_b, width):
+    draw_line(color, point_a, point_b, width)
+    half_width = math.ceil(width / 2)
+    draw_ellipse(color, (point_a[0] - half_width, point_a[1] - half_width), (point_a[0] + half_width, point_a[1] + half_width))
+    draw_ellipse(color, (point_b[0] - half_width, point_b[1] - half_width), (point_b[0] + half_width, point_b[1] + half_width))
 
 def draw_text(color, position, text, font_name, size):
     global window

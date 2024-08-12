@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ezdrawing',
-    version='0.0.3',
+    version='0.0.4',
     py_modules=['ezdrawing'],
     install_requires=[
         'pygame>=2.6',
