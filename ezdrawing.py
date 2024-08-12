@@ -1,5 +1,6 @@
 import math
 import pygame
+from pygame import gfxdraw
 
 #parameter validation
 def validate_initialized():
@@ -74,54 +75,85 @@ def update():
     pygame.display.flip()
 
 #drawing stuff
-def draw_rect(color, top_left, bottom_right):
+def draw_rect(color, top_left, bottom_right, validate = True, undoable = True):
     global window
-    validate_color(color)
-    validate_rect(top_left, bottom_right)
+    if validate:
+        validate_color(color)
+        validate_rect(top_left, bottom_right)
     
-    update_old_window()
+    if undoable:
+        update_old_window()
     
     pygame.draw.rect(window, color, (*top_left, bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
 
-def draw_ellipse(color, top_left, bottom_right):
+def draw_ellipse(color, top_left, bottom_right, validate = True, undoable = True):
     global window
-    validate_color(color)
-    validate_rect(top_left, bottom_right)
+    if validate:
+        validate_color(color)
+        validate_rect(top_left, bottom_right)
     
-    update_old_window()
+    if undoable:
+        update_old_window()
     
-    pygame.draw.ellipse(window, color, (*top_left, bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
-
-def draw_line(color, point_a, point_b, width):
+    big = pygame.Surface(((bottom_right[0] - top_left[0]) * 4, (bottom_right[1] - top_left[1]) * 4), pygame.SRCALPHA)
+    pygame.draw.ellipse(big, color, (0, 0, (bottom_right[0] - top_left[0]) * 4, (bottom_right[1] - top_left[1]) * 4))
+    small = pygame.transform.smoothscale(big, (bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
+    window.blit(small, top_left)
+    
+def draw_line(color, point_a, point_b, width, validate = True, undoable = True):
     global window
-    validate_color(color)
-    validate_2_tuple_of_ints(point_a, "point_a")
-    validate_2_tuple_of_ints(point_b, "point_b")
-    validate_integer_in_range(width, "width", 0)
+    if validate:
+        validate_color(color)
+        validate_2_tuple_of_ints(point_a, "point_a")
+        validate_2_tuple_of_ints(point_b, "point_b")
+        validate_integer_in_range(width, "width", 0)
     
-    update_old_window()
+    if undoable:
+        update_old_window()
     
     if point_a == point_b: #avoid division by 0 by just not drawing anything
         return
 
+    #this is going to be drawn to a 4x supersampled surface, so make everything big
     offset = (point_b[0] - point_a[0], point_b[1] - point_a[1]) #vector from pointA to pointB
     offset = (-offset[1], offset[0]) #rotate 90 degrees
     len = (offset[0] ** 2 + offset[1] ** 2) ** 0.5
-    offset = ((offset[0] * width) / (len * 2), 
-            (offset[1] * width) / (len * 2)) #normalize and multiply by width / 2
-    offset_1_abs_ceil = (math.ceil(abs(offset[0])), math.ceil(abs(offset[1]))) #make sure to round away from 0 so you never have width 0
-    offset = (offset_1_abs_ceil[0] if offset[0] > 0 else -offset_1_abs_ceil[0],
-            offset_1_abs_ceil[1] if offset[1] > 0 else -offset_1_abs_ceil[1]) #get sign back
-    pygame.draw.polygon(window, color, [(point_a[0] + offset[0], point_a[1] + offset[1]),
-                                        (point_b[0] + offset[0], point_b[1] + offset[1]),
-                                        (point_b[0] - offset[0], point_b[1] - offset[1]),
-                                        (point_a[0] - offset[0], point_a[1] - offset[1])]) #get the 4 points of the line and draw
+    offset = ((offset[0] * width * 2) / len, 
+            (offset[1] * width * 2) / len) #normalize and multiply by 4 * width / 2
+    offset = (round(offset[0]), round(offset[1])) #round
     
-def draw_capped_line(color, point_a, point_b, width):
-    draw_line(color, point_a, point_b, width)
-    half_width = math.ceil(width / 2)
-    draw_ellipse(color, (point_a[0] - half_width, point_a[1] - half_width), (point_a[0] + half_width, point_a[1] + half_width))
-    draw_ellipse(color, (point_b[0] - half_width, point_b[1] - half_width), (point_b[0] + half_width, point_b[1] + half_width))
+    point_vec = ((point_b[0] - point_a[0]) * 4, (point_b[1] - point_a[1]) * 4) #vector from pointA to pointB but big
+    points = [(offset[0], offset[1]), (-offset[0], -offset[1]), #the points, but with some negative coordinates
+              (point_vec[0] - offset[0], point_vec[1] - offset[1]),
+              (point_vec[0] + offset[0], point_vec[1] + offset[1])]
+    min_point = (min([i[0] for i in points]), min([i[1] for i in points]))
+    points_moved = [(i[0] - min_point[0], i[1] - min_point[1]) for i in points] #now all have positive coordinates
+    bigSurfaceSize = (max([i[0] for i in points_moved]), max([i[1] for i in points_moved])) #the size that the big surface has to be
+    big = pygame.Surface(bigSurfaceSize, pygame.SRCALPHA)
+    pygame.draw.polygon(big, color, points_moved) #draw the line to the big surface
+    small = pygame.transform.smoothscale(big, (round(bigSurfaceSize[0] / 4), round(bigSurfaceSize[1] / 4))) #scale it down
+    blit_offset = (round(min_point[0] / 4), round(min_point[1] / 4)) #because all the point coords had to be positive, when blitting the points need to be offset
+    window.blit(small, (point_a[0] + blit_offset[0], point_a[1] + blit_offset[1])) #blit
+    
+    
+def draw_capped_line(color, point_a, point_b, width, validate = True, undoable = True):
+    if validate:
+        validate_color(color)
+        validate_2_tuple_of_ints(point_a, "point_a")
+        validate_2_tuple_of_ints(point_b, "point_b")
+        validate_integer_in_range(width, "width", 0)
+    
+    if undoable:
+        update_old_window()
+    
+    draw_line(color, point_a, point_b, width, False, False)
+    if width <= 1: #drawing the cap ellipses makes the line look thicker than it should
+        return
+    half_width = math.floor(width / 2)
+    draw_ellipse(color, (point_a[0] - half_width, point_a[1] - half_width),
+                        (point_a[0] + half_width, point_a[1] + half_width), False, False)
+    draw_ellipse(color, (point_b[0] - half_width, point_b[1] - half_width),
+                        (point_b[0] + half_width, point_b[1] + half_width), False, False)
 
 def draw_text(color, position, text, font_name, size):
     global window
