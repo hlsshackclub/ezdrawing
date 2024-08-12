@@ -1,0 +1,7 @@
+this is because i keep forgetting what commands to run to build this thing
+
+python setup.py sdist bdist_wheel
+
+to upload to real pypi: twine upload -u __token__ -p <token here> dist/*
+
+to upload to testpypi: twine upload --repository testpypi -u __token__ -p <token here> dist/*

@@ -1,0 +1,1 @@
+A drawing library intended to be as simple to use as possible. For teaching purposes.
