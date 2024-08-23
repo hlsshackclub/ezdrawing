@@ -1,7 +1,5 @@
 import math
-import os
 import pygame
-from pygame import gfxdraw
 
 #parameter validation
 def validate_initialized():

@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='ezdrawing',
-    version='0.0.4',
-    py_modules=['ezdrawing'],
+    version='0.0.8',
+    py_modules=['ezdrawingpg', 'ezdrawingtk'],
     install_requires=[
         'pygame>=2.6',
     ],

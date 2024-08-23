@@ -1,1 +1,1 @@
-A drawing library intended to be as simple to use as possible. For teaching purposes.
+A drawing library intended to be as simple to use as possible. For teaching purposes. Has both a pygame and a tk backend.
