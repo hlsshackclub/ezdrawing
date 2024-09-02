@@ -305,16 +305,18 @@ def save(path):
 window = None
 window_surface_old = None
 opened = False
-def open_window(window_size):
+def open_window(window_size, title = "My Ezdrawing Window"):
     global window, window_surface_old, opened
     validate_2_tuple_of_ints(window_size, "window_size")
     for i in range(2):
         validate_integer_in_range(window_size[i], f"window_size[{i}]", 1)
+    validate_string(title, "title")
     
     pygame.init()
 
     window = pygame.display.set_mode(window_size)
     window.fill((255, 255, 255))
+    pygame.display.set_caption(title)
 
     window_surface_old = pygame.Surface(window_size)
     update_old_window()

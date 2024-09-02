@@ -204,16 +204,19 @@ window = None
 canvas = None
 objects = []
 opened = False
-def open_window(window_size):
+def open_window(window_size, title = "My Ezdrawing Window"):
     global window, canvas, opened
     validate_2_tuple_of_ints(window_size, "window_size")
     for i in range(2):
         validate_integer_in_range(window_size[i], f"window_size[{i}]", 1)
+    validate_string(title, "title")
     
     window = tk.Tk()
     window.geometry(f"{window_size[0]}x{window_size[1]}")
+    window.title(title)
     
     canvas = tk.Canvas(window, width=window_size[0], height=window_size[1])
+    canvas.configure(bg="white")
     canvas.pack()
     
     window.bind("<Key>", handle_key_press)
@@ -231,3 +234,6 @@ def open_window(window_size):
 def update():
     global window
     window.update()
+
+def quit():
+    pass #does nothing, but is here for consistency. tkinter window quits automatically after the mainloop is broken
